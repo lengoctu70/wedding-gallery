@@ -39,7 +39,7 @@ export async function GET(
       });
     }
 
-    const decryptedId = await encryptionService.decrypt(encryptedId);
+    const decryptedId = encryptionService.decrypt(encryptedId);
     const file = await GetFile(encryptedId);
     if (!file.success) {
       throw new Error(`[404] ${file.message}`, {

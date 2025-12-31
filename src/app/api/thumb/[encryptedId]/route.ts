@@ -30,7 +30,7 @@ export async function GET(request: NextRequest, { params }: Props) {
       throw new Error("Invalid size");
     }
 
-    const decryptedId = await encryptionService.decrypt(encryptedId);
+    const decryptedId = encryptionService.decrypt(encryptedId);
 
     const url = `https://drive.google.com/thumbnail?id=${decryptedId}&sz=w${size}`;
 

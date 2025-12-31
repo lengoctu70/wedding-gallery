@@ -1,3 +1,5 @@
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "crypto";
+
 import { decodeBase64, decodeBase64url, encodeBase64, encodeBase64url } from "@oslojs/encoding";
 import { type GoogleAuth } from "google-auth-library";
 import { type JSONClient } from "google-auth-library/build/src/auth/googleauth";
@@ -7,29 +9,38 @@ import "server-only";
 import { Schema_ServiceAccount } from "~/types/schema";
 
 class EncryptionService {
-  private key: string;
-  private delimiter = ";";
+  private key: Buffer;
+  private readonly SALT = "wedding-gallery-v2";
+
   constructor() {
     if (!process.env.ENCRYPTION_KEY) {
       throw new Error("ENCRYPTION_KEY is required in the environment variables.");
     }
-    this.key = process.env.ENCRYPTION_KEY;
+    // Derive 32-byte key using scrypt (more secure than SHA-256)
+    this.key = scryptSync(process.env.ENCRYPTION_KEY, this.SALT, 32);
   }
 
-  async encrypt(data: string, forceKey?: string): Promise<string> {
+  /**
+   * Encrypts data using AES-256-GCM with Node.js native crypto
+   * Returns base64url-encoded string (URL-safe, compact)
+   * Format: base64url(iv[12 bytes] + authTag[16 bytes] + ciphertext)
+   */
+  encrypt(data: string, forceKey?: string): string {
     try {
-      if (!crypto) throw new Error("Crypto Web API is not available in this environment.");
+      const key = forceKey ? scryptSync(forceKey, this.SALT, 32) : this.key;
+      const iv = randomBytes(12); // GCM standard IV size
 
-      const iv = crypto.getRandomValues(new Uint8Array(12));
-      const alg = { name: "AES-GCM", iv };
-      const keyhash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(forceKey ?? this.key));
+      const cipher = createCipheriv("aes-256-gcm", key, iv);
 
-      const encodedData = new TextEncoder().encode(data);
-      const secretKey = await crypto.subtle.importKey("raw", keyhash, alg, false, ["encrypt"]);
+      let encrypted = cipher.update(data, "utf8", "hex");
+      encrypted += cipher.final("hex");
 
-      const encryptedData = await crypto.subtle.encrypt(alg, secretKey, encodedData);
+      const authTag = cipher.getAuthTag();
 
-      return [Buffer.from(encryptedData).toString("hex"), Buffer.from(iv).toString("hex")].join(this.delimiter);
+      // Combine: IV (12) + Auth Tag (16) + Ciphertext
+      const combined = Buffer.concat([iv, authTag, Buffer.from(encrypted, "hex")]);
+
+      return combined.toString("base64url");
     } catch (error) {
       const e = error as Error;
       console.error(`[EncryptionService.encrypt] ${e.message}`);
@@ -37,21 +48,27 @@ class EncryptionService {
     }
   }
 
-  async decrypt(hash: string, forceKey?: string): Promise<string> {
+  /**
+   * Decrypts base64url-encoded data encrypted with AES-256-GCM
+   * Expects format: base64url(iv[12 bytes] + authTag[16 bytes] + ciphertext)
+   */
+  decrypt(encoded: string, forceKey?: string): string {
     try {
-      if (!crypto) throw new Error("Crypto Web API is not available in this environment.");
+      const key = forceKey ? scryptSync(forceKey, this.SALT, 32) : this.key;
+      const combined = Buffer.from(encoded, "base64url");
 
-      const [cipherText, iv] = hash.split(this.delimiter);
-      if (!cipherText || !iv) throw new Error("Invalid hash format.");
+      // Extract components
+      const iv = combined.slice(0, 12);
+      const authTag = combined.slice(12, 28); // 16 bytes
+      const encryptedHex = combined.slice(28).toString("hex");
 
-      const alg = { name: "AES-GCM", iv: new Uint8Array(Buffer.from(iv, "hex")) };
-      const keyhash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(forceKey ?? this.key));
+      const decipher = createDecipheriv("aes-256-gcm", key, iv);
+      decipher.setAuthTag(authTag);
 
-      const secretKey = await crypto.subtle.importKey("raw", keyhash, alg, false, ["decrypt"]);
+      let decrypted = decipher.update(encryptedHex, "hex", "utf8");
+      decrypted += decipher.final("utf8");
 
-      const decryptedData = await crypto.subtle.decrypt(alg, secretKey, new Uint8Array(Buffer.from(cipherText, "hex")));
-
-      return new TextDecoder().decode(decryptedData);
+      return decrypted;
     } catch (error) {
       const e = error as Error;
       console.error(`[EncryptionService.decrypt] ${e.message}`);

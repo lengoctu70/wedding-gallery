@@ -31,7 +31,7 @@ export async function CreateFileToken(
       error: parsedTokenObject.error.message,
     };
 
-  const token = await encryptionService.encrypt(JSON.stringify(parsedTokenObject.data));
+  const token = encryptionService.encrypt(JSON.stringify(parsedTokenObject.data));
 
   return {
     success: true,
@@ -47,7 +47,7 @@ export async function CreateFileToken(
 export async function ValidateFileToken(
   token: string,
 ): Promise<ActionResponseSchema<z.infer<typeof Schema_FileToken>>> {
-  const decryptedToken = await encryptionService.decrypt(token);
+  const decryptedToken = encryptionService.decrypt(token);
   const parsedToken = Schema_FileToken.safeParse(JSON.parse(decryptedToken));
   if (!parsedToken.success)
     return {

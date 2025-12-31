@@ -13,7 +13,7 @@ import config from "config";
  * @returns {string} - The file path.
  */
 export async function GetFilePaths(fileName: string, parentId?: string): Promise<ActionResponseSchema<string>> {
-  const decryptedRootId = await encryptionService.decrypt(config.apiConfig.rootFolder);
+  const decryptedRootId = encryptionService.decrypt(config.apiConfig.rootFolder);
   if (!decryptedRootId)
     return { success: false, message: "Failed to decrypt root folder ID", error: "Failed to decrypt root folder ID" };
 
@@ -54,9 +54,9 @@ export async function ValidatePaths(
   paths: string[],
 ): Promise<ActionResponseSchema<{ id: string; path: string; mimeType: string }[]>> {
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
-  const decryptedRootId = await encryptionService.decrypt(config.apiConfig.rootFolder);
+  const decryptedRootId = encryptionService.decrypt(config.apiConfig.rootFolder);
   const decryptedSharedDrive = isSharedDrive
-    ? await encryptionService.decrypt(config.apiConfig.sharedDrive!)
+    ? encryptionService.decrypt(config.apiConfig.sharedDrive!)
     : undefined;
 
   const promises: Promise<PathFetch | null>[] = [];
@@ -146,7 +146,7 @@ export async function ValidatePaths(
   const response: { path: string; id: string; mimeType: string }[] = [];
   for (const item of validatedPaths) {
     response.push({
-      id: await encryptionService.encrypt(item.data[0]?.id ?? ""),
+      id: encryptionService.encrypt(item.data[0]?.id ?? ""),
       path: decodeURIComponent(item.path),
       mimeType: item.data[0]?.mimeType ?? "",
     });

@@ -14,7 +14,7 @@ import { GetFilePaths } from "./paths";
 export async function SearchFiles(query: string): Promise<ActionResponseSchema<z.infer<typeof Schema_File>[]>> {
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
   const decryptedSharedDrive = isSharedDrive
-    ? await encryptionService.decrypt(config.apiConfig.sharedDrive!)
+    ? encryptionService.decrypt(config.apiConfig.sharedDrive!)
     : undefined;
 
   const filterName = config.apiConfig.hiddenFiles.map((item) => `not name = '${item}'`).join(" and ");
@@ -42,8 +42,8 @@ export async function SearchFiles(query: string): Promise<ActionResponseSchema<z
   const files: z.infer<typeof Schema_File>[] = [];
   for (const file of data.files) {
     files.push({
-      encryptedId: await encryptionService.encrypt(file.id!),
-      encryptedWebContentLink: file.webContentLink ? await encryptionService.encrypt(file.webContentLink) : undefined,
+      encryptedId: encryptionService.encrypt(file.id!),
+      encryptedWebContentLink: file.webContentLink ? encryptionService.encrypt(file.webContentLink) : undefined,
       name: file.name!,
       mimeType: file.mimeType!,
       trashed: file.trashed ?? false,
@@ -85,7 +85,7 @@ export async function SearchFiles(query: string): Promise<ActionResponseSchema<z
 
 export async function GetSearchResultPath(id: string): Promise<ActionResponseSchema<string>> {
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
-  const decryptedId = await encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
+  const decryptedId = encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
 
   const { data } = await gdrive.files.get({
     fileId: decryptedId,

@@ -84,7 +84,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const fileSize = Number(file.data?.size ?? 0);
     if ((config.apiConfig.maxFileSize > 0 && fileSize > config.apiConfig.maxFileSize) || forceRedirect) {
-      const decryptedContentUrl = await encryptionService.decrypt(file.data.encryptedWebContentLink);
+      const decryptedContentUrl = encryptionService.decrypt(file.data.encryptedWebContentLink);
       const contentUrl = new URL(decryptedContentUrl);
       contentUrl.searchParams.set("confirm", "1");
       return new NextResponse(null, {
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const content = await gdrive.files.get(
       {
-        fileId: await encryptionService.decrypt(file.data.encryptedId),
+        fileId: encryptionService.decrypt(file.data.encryptedId),
         alt: "media",
         supportsAllDrives: config.apiConfig.isTeamDrive,
         acknowledgeAbuse: true,

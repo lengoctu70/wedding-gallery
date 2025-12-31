@@ -112,7 +112,7 @@ export async function GenerateConfiguration(
     },
     {
       key: "api.rootFolder",
-      value: await encryptionService.encrypt(values.api.rootFolder, values.environment.ENCRYPTION_KEY),
+      value: encryptionService.encrypt(values.api.rootFolder, values.environment.ENCRYPTION_KEY),
     },
     {
       key: "api.isTeamDrive",
@@ -121,7 +121,7 @@ export async function GenerateConfiguration(
     {
       key: "api.sharedDrive",
       value: values.api.sharedDrive
-        ? await encryptionService.encrypt(values.api.sharedDrive, values.environment.ENCRYPTION_KEY)
+        ? encryptionService.encrypt(values.api.sharedDrive, values.environment.ENCRYPTION_KEY)
         : "",
     },
     {
@@ -275,7 +275,7 @@ export async function GenerateConfiguration(
     data: {
       configuration,
       env,
-      zip: new Blob([zip], { type: "application/zip" }),
+      zip: new Blob([Buffer.from(zip)], { type: "application/zip" }),
     },
   };
 }

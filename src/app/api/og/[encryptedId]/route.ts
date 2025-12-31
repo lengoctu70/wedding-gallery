@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: Props) {
   const { encryptedId } = await params;
 
   try {
-    const decryptedId = await encryptionService.decrypt(encryptedId);
+    const decryptedId = encryptionService.decrypt(encryptedId);
     const { data } = await gdrive.files.get({
       fileId: decryptedId,
       fields: "id, name, mimeType, webContentLink",

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       });
     }
 
-    const decryptedLink = await encryptionService.decrypt(fileMeta.data.encryptedWebContentLink);
+    const decryptedLink = encryptionService.decrypt(fileMeta.data.encryptedWebContentLink);
     return new NextResponse(null, {
       status: 302,
       headers: {

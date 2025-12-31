@@ -24,9 +24,9 @@ export async function ListFiles({ id, pageToken }: { id?: string; pageToken?: st
   }>
 > {
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
-  const decryptedId = await encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
+  const decryptedId = encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
   const decryptedSharedDrive = isSharedDrive
-    ? await encryptionService.decrypt(config.apiConfig.sharedDrive!)
+    ? encryptionService.decrypt(config.apiConfig.sharedDrive!)
     : undefined;
 
   const filterName = config.apiConfig.hiddenFiles.map((item) => `not name = '${item}'`).join(" and ");
@@ -60,8 +60,8 @@ export async function ListFiles({ id, pageToken }: { id?: string; pageToken?: st
   const files: z.infer<typeof Schema_File>[] = [];
   for (const file of data.files) {
     files.push({
-      encryptedId: await encryptionService.encrypt(file.id!),
-      encryptedWebContentLink: file.webContentLink ? await encryptionService.encrypt(file.webContentLink) : undefined,
+      encryptedId: encryptionService.encrypt(file.id!),
+      encryptedWebContentLink: file.webContentLink ? encryptionService.encrypt(file.webContentLink) : undefined,
       name: file.name!,
       mimeType: file.mimeType!,
       trashed: file.trashed ?? false,
@@ -109,7 +109,7 @@ export async function ListFiles({ id, pageToken }: { id?: string; pageToken?: st
  * @param id - File ID to fetch
  */
 export async function GetFile(id: string): Promise<ActionResponseSchema<z.infer<typeof Schema_File> | null>> {
-  const decryptedId = await encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
+  const decryptedId = encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
 
   const { data } = await gdrive.files.get({
     fileId: decryptedId,
@@ -124,8 +124,8 @@ export async function GetFile(id: string): Promise<ActionResponseSchema<z.infer<
     };
 
   const file: z.infer<typeof Schema_File> = {
-    encryptedId: await encryptionService.encrypt(data.id),
-    encryptedWebContentLink: data.webContentLink ? await encryptionService.encrypt(data.webContentLink) : undefined,
+    encryptedId: encryptionService.encrypt(data.id),
+    encryptedWebContentLink: data.webContentLink ? encryptionService.encrypt(data.webContentLink) : undefined,
     name: data.name!,
     mimeType: data.mimeType!,
     trashed: data.trashed ?? false,
@@ -175,9 +175,9 @@ export async function GetReadme(id: string | null = null): Promise<
   } | null>
 > {
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
-  const decryptedId = await encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
+  const decryptedId = encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
   const decryptedSharedDrive = isSharedDrive
-    ? await encryptionService.decrypt(config.apiConfig.sharedDrive!)
+    ? encryptionService.decrypt(config.apiConfig.sharedDrive!)
     : undefined;
 
   const filterQuery: string = [
@@ -303,9 +303,9 @@ export async function GetReadme(id: string | null = null): Promise<
  */
 export async function GetBanner(id: string | null = null): Promise<ActionResponseSchema<string | null>> {
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
-  const decryptedId = await encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
+  const decryptedId = encryptionService.decrypt(id ?? config.apiConfig.rootFolder);
   const decryptedSharedDrive = isSharedDrive
-    ? await encryptionService.decrypt(config.apiConfig.sharedDrive!)
+    ? encryptionService.decrypt(config.apiConfig.sharedDrive!)
     : undefined;
 
   const filterQuery: string = [
@@ -334,7 +334,7 @@ export async function GetBanner(id: string | null = null): Promise<ActionRespons
       data: null,
     };
 
-  const encryptedId = await encryptionService.encrypt(data.files[0]?.id ?? "");
+  const encryptedId = encryptionService.encrypt(data.files[0]?.id ?? "");
   return {
     success: true,
     message: "Banner found",
@@ -347,7 +347,7 @@ export async function GetBanner(id: string | null = null): Promise<ActionRespons
  * @param id - File ID to fetch
  */
 export async function GetContent(id: string): Promise<ActionResponseSchema<string>> {
-  const decryptedId = await encryptionService.decrypt(id);
+  const decryptedId = encryptionService.decrypt(id);
 
   const { data, status, statusText } = await gdrive.files.get(
     {
@@ -389,9 +389,9 @@ export async function GetSiblingsMedia(paths: string[]): Promise<ActionResponseS
 
   const parentId = folderPaths[folderPaths.length - 1]?.id ?? config.apiConfig.rootFolder;
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
-  const decryptedParentId = await encryptionService.decrypt(parentId);
+  const decryptedParentId = encryptionService.decrypt(parentId);
   const decryptedSharedDrive = isSharedDrive
-    ? await encryptionService.decrypt(config.apiConfig.sharedDrive!)
+    ? encryptionService.decrypt(config.apiConfig.sharedDrive!)
     : undefined;
 
   const filterName = config.apiConfig.hiddenFiles.map((item) => `not name = '${item}'`).join(" and ");
@@ -419,8 +419,8 @@ export async function GetSiblingsMedia(paths: string[]): Promise<ActionResponseS
   const files: z.infer<typeof Schema_File>[] = [];
   for (const file of data.files) {
     files.push({
-      encryptedId: await encryptionService.encrypt(file.id!),
-      encryptedWebContentLink: file.webContentLink ? await encryptionService.encrypt(file.webContentLink) : undefined,
+      encryptedId: encryptionService.encrypt(file.id!),
+      encryptedWebContentLink: file.webContentLink ? encryptionService.encrypt(file.webContentLink) : undefined,
       name: file.name!,
       mimeType: file.mimeType!,
       trashed: file.trashed ?? false,

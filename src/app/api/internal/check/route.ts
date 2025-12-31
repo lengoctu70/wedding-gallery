@@ -12,9 +12,9 @@ export async function GET() {
       throw new Error("This route is only available in development environment");
     }
 
-    const rootId = await encryptionService.decrypt(config.apiConfig.rootFolder);
+    const rootId = encryptionService.decrypt(config.apiConfig.rootFolder);
     const sharedDriveId = config.apiConfig.sharedDrive
-      ? await encryptionService.decrypt(config.apiConfig.sharedDrive)
+      ? encryptionService.decrypt(config.apiConfig.sharedDrive)
       : undefined;
 
     return NextResponse.json(

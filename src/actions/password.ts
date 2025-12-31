@@ -65,7 +65,7 @@ export async function CheckIndexPassword(): Promise<ActionResponseSchema> {
     };
     return response;
   }
-  const decryptedPassword = await encryptionService.decrypt(password);
+  const decryptedPassword = encryptionService.decrypt(password);
 
   if (decryptedPassword !== process.env.SITE_PASSWORD) {
     response = {
@@ -92,7 +92,7 @@ export async function CheckIndexPassword(): Promise<ActionResponseSchema> {
 export async function SetIndexPassword(password: string): Promise<ActionResponseSchema> {
   try {
     const store = await cookies();
-    const encryptedPassword = await encryptionService.encrypt(password);
+    const encryptedPassword = encryptionService.encrypt(password);
     store.set(COOKIES_NAME.indexPassword, encryptedPassword, COOKIES_OPTIONS);
     revalidatePath("/", "layout");
 
@@ -122,16 +122,16 @@ export async function CheckPagePassword(
   }[],
 ): Promise<ActionResponseSchema> {
   const isSharedDrive = !!(config.apiConfig.isTeamDrive && config.apiConfig.sharedDrive);
-  const decryptedRootId = await encryptionService.decrypt(config.apiConfig.rootFolder);
+  const decryptedRootId = encryptionService.decrypt(config.apiConfig.rootFolder);
   const decryptedSharedDrive = isSharedDrive
-    ? await encryptionService.decrypt(config.apiConfig.sharedDrive!)
+    ? encryptionService.decrypt(config.apiConfig.sharedDrive!)
     : undefined;
 
   const pathsArray = paths;
 
   const folderIds: string[] = [];
   for (const path of pathsArray) {
-    const decryptedId = await encryptionService.decrypt(path.id);
+    const decryptedId = encryptionService.decrypt(path.id);
     if (decryptedId === decryptedRootId) continue;
     folderIds.push(decryptedId);
   }
@@ -185,7 +185,7 @@ export async function CheckPagePassword(
       error: `Please enter password for '${currentFolderPath}'`,
     };
 
-  const savedPasswordValue = await encryptionService.decrypt(currentFolderPassword);
+  const savedPasswordValue = encryptionService.decrypt(currentFolderPassword);
   const { data: passwordFile } = await gdriveNoCache.files.get(
     {
       fileId: protectedFolderPassword.id!,
@@ -226,7 +226,7 @@ export async function SetPagePassword(path: string, password: string): Promise<A
   try {
     const store = await cookies();
     const storedPassword = JSON.parse(store.get(COOKIES_NAME.folderPassword)?.value ?? "{}") as Record<string, string>;
-    const encryptedPassword = await encryptionService.encrypt(password);
+    const encryptedPassword = encryptionService.encrypt(password);
 
     storedPassword[path] = encryptedPassword;
     store.set(COOKIES_NAME.folderPassword, JSON.stringify(storedPassword), COOKIES_OPTIONS);
